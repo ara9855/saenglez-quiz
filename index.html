@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생글즈 데이터 퀴즈쇼</title>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; background: #f7f1e6; color: #4a3f35; font-family: 'Gowun Dodum', sans-serif; }
+body::before { content: ''; position: fixed; inset: 18px; border: 1px solid #ddcdb4; border-radius: 18px; pointer-events: none; z-index: 5; }
+.slide { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 8vh 9vw; text-align: center; }
+.slide.active { display: flex; }
+.tag { font-size: clamp(14px, 1.5vw, 20px); letter-spacing: 0.35em; color: #a86450; margin-bottom: 3.5vh; }
+.tag::before { content: '❀'; margin-right: 10px; color: #c9a08a; }
+.tag::after { content: '❀'; margin-left: 10px; color: #c9a08a; }
+.hook { font-family: 'Gowun Batang', serif; font-weight: 700; font-size: clamp(30px, 4.8vw, 66px); line-height: 1.45; color: #3f342a; margin-bottom: 4vh; }
+.q { font-size: clamp(19px, 2.4vw, 34px); line-height: 1.75; color: #6b5d4f; max-width: 26em; }
+.q b { color: #a86450; font-weight: 400; }
+.hint { font-size: clamp(14px, 1.6vw, 22px); color: #a99a86; margin-top: 3vh; }
+.step { opacity: 0; transform: translateY(20px); transition: opacity 0.5s, transform 0.5s; }
+.step.on { opacity: 1; transform: none; }
+.answer { font-family: 'Gowun Batang', serif; font-weight: 700; font-size: clamp(26px, 3.8vw, 54px); line-height: 1.5; color: #a86450; margin-top: 5vh; max-width: 22em; }
+.sub { font-size: clamp(16px, 1.9vw, 26px); line-height: 1.8; color: #6b5d4f; margin-top: 3vh; max-width: 30em; }
+.insight { margin-top: 4vh; padding: 2.8vh 3.2vw; background: #efe4d2; border-radius: 18px; text-align: left; font-size: clamp(14px, 1.8vw, 24px); line-height: 1.8; color: #6b5d4f; max-width: 34em; }
+.insight b { color: #8a4f3d; font-weight: 400; font-family: 'Gowun Batang', serif; }
+.vs { display: flex; gap: 3.5vw; margin-top: 4vh; flex-wrap: wrap; justify-content: center; }
+.vs > div { background: #fdfaf4; border: 1px solid #e3d7c3; border-radius: 18px; padding: 3vh 3vw; min-width: 260px; max-width: 400px; text-align: left; }
+.vs h3 { font-family: 'Gowun Batang', serif; font-size: clamp(17px, 2vw, 27px); color: #a86450; margin-bottom: 1.5vh; }
+.vs p { font-size: clamp(14px, 1.6vw, 21px); line-height: 1.75; color: #6b5d4f; }
+.vs p b { color: #8a4f3d; font-weight: 400; }
+.bignum { font-family: 'Gowun Batang', serif; font-weight: 700; font-size: clamp(56px, 10vw, 150px); color: #a86450; line-height: 1.1; }
+.numlabel { font-size: clamp(15px, 1.8vw, 23px); color: #a99a86; margin-top: 1.5vh; }
+.speedtag { background: #a86450; color: #f7f1e6; border-radius: 999px; padding: 6px 22px; }
+.speedtag::before, .speedtag::after { color: #e8cdbb; }
+.srow { display: flex; justify-content: space-between; align-items: baseline; gap: 3vw; width: min(88vw, 860px); padding: 1.6vh 0; border-bottom: 1px solid #e3d7c3; }
+.srow .chos { font-family: 'Gowun Batang', serif; font-weight: 700; font-size: clamp(20px, 3vw, 42px); color: #3f342a; letter-spacing: 0.06em; text-align: left; }
+.srow .sans { font-size: clamp(17px, 2.2vw, 32px); color: #a86450; font-family: 'Gowun Batang', serif; font-weight: 700; text-align: right; white-space: nowrap; }
+#hud { position: fixed; bottom: 0; left: 0; right: 0; padding: 26px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #b3a591; z-index: 10; }
+#bar { position: fixed; bottom: 0; left: 0; height: 4px; background: #c9a08a; transition: width 0.4s; z-index: 11; }
+.keyhint { letter-spacing: 0.05em; }
+.title-main { font-family: 'Gowun Batang', serif; font-weight: 700; font-size: clamp(40px, 6.8vw, 100px); line-height: 1.4; color: #3f342a; }
+.title-sub { font-size: clamp(17px, 2.2vw, 30px); color: #8a7a67; margin-top: 4.5vh; line-height: 1.9; }
+.gold { color: #a86450; }
+.quote-serif { font-family: 'Gowun Batang', serif; }
+</style>
+</head>
+<body>
+
+<section class="slide active">
+  <div class="tag">생글즈 퀴즈</div>
+  <h1 class="title-main">우리가 함께 읽은 1년,<br><span class="gold">데이터로 열어봤습니다</span></h1>
+  <p class="title-sub">19명 · 인증글 923편 · 밑줄 1,078개 전수 분석<br>13개의 질문과 2번의 스피드 라운드로 우리의 52주를 되돌아봅니다</p>
+  <p class="hint step">클릭 또는 스페이스 키로 진행합니다 · F 키를 누르면 전체 화면</p>
+</section>
+
+<section class="slide">
+  <div class="tag">워밍업</div>
+  <h1 class="hook">같은 이름 찾기!</h1>
+  <p class="q">이번 시즌 86명 중, 성과 이름이 <b>완전히 똑같은</b> 동명이인은 몇 쌍일까요?</p>
+  <p class="hint">힌트: 이름만 같은 사람은 훨씬 더 많습니다</p>
+  <p class="answer step">정답은 이유림 · 최유리님!<br>총 2쌍이 있습니다</p>
+  <p class="sub step">그리고 성은 다르지만 이름이 같은<br>혜인 3명, 보경 3명, 지혜 3명이 있답니다 :)</p>
+  <div class="insight step"><b>이유림님 두 분, 최유리님 두 분 — 자리에서 한번 일어나 주세요!</b> 서로 얼굴 한번 확인하고 가겠습니다 :)</div>
+</section>
+
+<section class="slide">
+  <div class="tag">질문 1</div>
+  <h1 class="hook">우리, 1년 동안<br>얼마나 썼을까요?</h1>
+  <p class="q">19명이 52주 동안 쓴 인증글, <b>전부 몇 편</b>일까요?</p>
+  <p class="hint">힌트: 한 사람당 평균 49편입니다</p>
+  <div class="step"><div class="bignum">923편</div><p class="numlabel">글자로는 무려 141만 자!</p></div>
+  <p class="sub step">원고지 7,060매, 단행본으로 약 14권 분량입니다!<br>한 사람당 책 반 권 이상을 쓴 셈입니다</p>
+  <div class="insight step"><b>우리는 이미 함께 책을 쓴 사이입니다!</b> 1년 동안 쌓인 이 기록이 오늘 퀴즈의 재료입니다.</div>
+</section>
+
+<section class="slide">
+  <div class="tag">질문 2</div>
+  <h1 class="hook">1,078개의 밑줄 중<br>왕좌에 오른 문장이 있습니다!</h1>
+  <p class="q">52주 동안 우리가 <b>가장 많이 인용한</b> 생각구독 문장은 무엇일까요?</p>
+  <p class="hint">힌트: 무려 5명이 똑같은 문장에 멈춰 섰습니다</p>
+  <p class="answer step quote-serif">"착한 사람이 아니라 강한 사람이 되어야<br>현실 속의 기적을 이룰 수 있다"</p>
+  <p class="sub step">5호 '현실적 자립'에서 나왔습니다! 공동 1위로 "하지만 정확하게 하면, 반드시 때는 온다"(41호)도 5명의 밑줄을 받았습니다</p>
+  <div class="insight step"><b>우리가 목말랐던 건 위로가 아니라 단단함이었습니다!</b> 최다 인용 문장의 키워드는 강함 · 정확함 · 자립 — 기준을 세워주는 문장에 19명이 반응했습니다.</div>
+</section>
+
+<section class="slide">
+  <div class="tag">질문 3</div>
+  <h1 class="hook">우리가 단체로 사라졌던<br>그 주가 있습니다!</h1>
+  <p class="q">52개의 호 중에서 <b>가장 많은 사람이 인증을 놓친</b> 호는 몇 호였을까요?</p>
+  <p class="hint">힌트: 때는 2025년 8월 말, 여름의 끝자락이었습니다</p>
+  <p class="answer step">20호 "나만 알고 싶던 기도" — 6명이 사라졌습니다!</p>
+  <p class="sub step">그런데 반전이 있습니다. 바로 앞 19호의 제목이 하필<br><span class="quote-serif gold">"지치면 나만 손해"</span>였습니다!<br>여기서 4명이 진짜로 지쳤고, 그 4명 전원이 20호도 연속으로 놓쳤습니다</p>
+  <div class="insight step"><b>꾸준함의 적은 의지가 아니라 끊긴 리듬이었습니다!</b> 휴가철에 뉴스레터 간격이 벌어지자(18일 공백) 연쇄 이탈이 시작됐습니다. 연휴 뒤에는 복귀 장치가 필요합니다.</div>
+</section>
+
+<section class="slide">
+  <div class="tag">질문 4</div>
+  <h1 class="hook">한 번 놓치면<br>무슨 일이 벌어질까요?</h1>
+  <p class="q">이번 호를 <b>쓴</b> 사람이 다음 호를 놓칠 확률은 5.5%.<br>그럼 이번 호를 <b>놓친</b> 사람이 다음 호도 놓칠 확률은?</p>
+  <p class="hint">힌트: 923편 전수 데이터가 계산했습니다</p>
+  <div class="step"><div class="bignum">30.4%</div><p class="numlabel">위험이 5.5배로 뛰었습니다!</p></div>
+  <p class="sub step">최장 기록은 무려 9연속 누락! 한 번 끊긴 리듬은 이렇게 무섭습니다</p>
+  <div class="insight step"><b>그런데 이 30.4%의 확률을 매번 이겨낸 사람들이 있습니다!</b> 누구인지는 — 바로 다음 문제입니다.</div>
+</section>
+
+<section class="slide">
+  <div class="tag">질문 5</div>
+  <h1 class="hook">넘어져도, 바로 일어난<br>사람들이 있습니다!</h1>
+  <p class="q">인증을 놓친 바로 다음 호에 한 번도 빠짐없이 돌아온,<br><b>즉시 복귀율 100%</b>의 주인공 세 명은 누구일까요?</p>
+  <p class="hint">힌트: 놓친 적은 있어도, 두 번 연속 놓친 적은 없습니다</p>
+  <p class="answer step">김아라 · 왕소연 · 최유리</p>
+  <p class="sub step">방금 보셨듯 한 번 놓치면 또 놓칠 확률이 30.4%인데,<br>세 사람은 그 확률을 매번 이겨내고 돌아왔습니다!</p>
+  <div class="insight step"><b>완벽보다 회복입니다!</b> 안 넘어지는 힘보다 넘어져도 바로 일어나는 힘 — 52주짜리 장기전에서 진짜 필요한 근육은 이쪽이었습니다.</div>
+</section>
+
+<section class="slide">
+  <div class="tag">질문 6</div>
+  <h1 class="hook">영혼의 단짝,<br>데이터로 찾아냈습니다!</h1>
+  <p class="q">52주 동안 <b>같은 문장에 가장 많이 함께 밑줄 친</b> 두 사람은 누구일까요?</p>
+  <p class="hint">힌트: 한 명은 누락 횟수 최다(11회)인데도 단짝 1위에 올랐습니다</p>
+  <p class="answer step">박영미 ♥ 이윤하 — 무려 24번 겹쳤습니다!</p>
+  <p class="sub step">"그저 다가오는 일에 최선을 다하는 태도만 있을 뿐"<br>"내면이 고요하니, 본성대로 바르게 되며" …<br>두 사람은 1년 내내 같은 문장 앞에 함께 멈춰 섰습니다</p>
+  <div class="insight step"><b>꾸준함과 공명은 별개였습니다!</b> 가장 자주 놓친 사람이 가장 깊게 공명했습니다. 성실도가 아니라 '어떤 문장에 멈추는가'가 그 사람의 결입니다.</div>
+</section>
+
+<section class="slide">
+  <div class="tag">질문 7</div>
+  <h1 class="hook">단짝 랭킹에 숨은<br>삼각관계가 있습니다!</h1>
+  <p class="q">단짝 1위는 박영미 · 이윤하(24회).<br>그런데 2위는 박영미 · <b>???</b>(20회), 3위는 <b>???</b> · 이윤하(18회).<br>물음표의 주인공은 누구일까요?</p>
+  <p class="hint">힌트: 한 사람입니다</p>
+  <p class="answer step">윤예섭님이었습니다!</p>
+  <p class="sub step">단짝 랭킹 1 · 2 · 3위가 전부 박영미 · 윤예섭 · 이윤하<br>세 사람의 조합입니다!</p>
+  <div class="insight step"><b>세 사람은 1년 내내, 서로 모르는 사이에 같은 문장 앞에서 만나고 있었습니다!</b> 오늘부로 공식 밑줄 삼총사로 임명합니다 :)</div>
+</section>
+
+<section class="slide">
+  <div class="tag">질문 8</div>
+  <h1 class="hook">가장 열심히 받아 적은<br>사람들을 찾았습니다!</h1>
+  <p class="q">인증글에 생각구독 <b>원문을 가장 많이 옮겨 적은</b> '필사왕' 두 사람은 누구일까요?</p>
+  <p class="hint">힌트: 어휘 분석에서 두 사람의 글이 가장 닮았다고 나왔는데, 알고 보니 닮은 건 문체가 아니었습니다</p>
+  <p class="answer step">박지영 · 이윤하</p>
+  <p class="sub step">두 사람을 닮게 만든 단어는 '알려드릴께요' '핀란드' '스웨덴' —<br>전부 뉴스레터 원문의 문장들이었습니다!</p>
+  <div class="insight step"><b>필사는 가장 정직한 밑줄입니다!</b> 좋은 문장을 만나면 요약하는 대신 통째로 옮겨 적는 두 사람이었습니다.</div>
+</section>
+
+<section class="slide">
+  <div class="tag speedtag">스피드 라운드 1</div>
+  <h1 class="hook">초성만 보고<br>호 제목 맞히기!</h1>
+  <p class="q">우리가 1년간 받은 생각구독의 제목들입니다.<br>초성만 보고 <b>바로 외쳐주세요!</b></p>
+  <div class="srow step"><span class="chos">ㅈㅊㅁ ㄴㅁ ㅅㅎ</span><span class="sans step">지치면 나만 손해</span></div>
+  <div class="srow step"><span class="chos">ㅅㅍ ㅇㄹㅅ</span><span class="sans step">실패 이력서</span></div>
+  <div class="srow step"><span class="chos">ㄱㅈㅇ ㄱㅂ</span><span class="sans step">강자의 공부</span></div>
+  <div class="srow step"><span class="chos">ㄴㅅㅇ ㅍㅈㅅ</span><span class="sans step">난세의 평정심</span></div>
+  <div class="srow step"><span class="chos">ㅇㅈ ㅍㄹㄱ ㄷㄲ</span><span class="sans step">언제 프로가 될까</span></div>
+  <div class="srow step" style="border-bottom:none"><span class="chos">ㅇㅅㅎ ㅁㄱ ㅎㅁㅎㄱ</span><span class="sans step">열심히 말고 현명하게</span></div>
+</section>
+
+<section class="slide">
+  <div class="tag">질문 9</div>
+  <h1 class="hook">MBTI보다 정확한<br>상극 판독기를 돌렸습니다!</h1>
+  <p class="q">전체 171쌍의 어휘를 비교했을 때, <b>쓰는 언어가 가장 달랐던</b> 두 사람은 누구일까요?</p>
+  <p class="hint">힌트: 두 사람이 같은 곳에 밑줄 친 건 52주 동안 딱 1번이었습니다</p>
+  <p class="answer step">김아라 ⚡ 박정은 — 공식 인증 상극이 탄생했습니다!</p>
+  <div class="vs step">
+    <div><h3>김아라의 언어</h3><p>점진적 · 문장 · 일터<br>실행과 기록의 언어였습니다</p></div>
+    <div><h3>박정은의 언어</h3><p>주객전도 · 피상적 · 커피<br>성찰과 일상의 언어였습니다</p></div>
+  </div>
+  <div class="insight step"><b>상극은 틀림이 아니라 스펙트럼입니다!</b> 같은 글을 읽고 이렇게까지 다른 걸 가져갈 수 있다는 것 — 그게 이 공동체의 폭입니다.</div>
+</section>
+
+<section class="slide">
+  <div class="tag">질문 10</div>
+  <h1 class="hook">그런데 그 상극이,<br>딱 한 번 만났습니다!</h1>
+  <p class="q">1년간 단 한 번도 같은 문장에 밑줄 치지 않았던 김아라와 박정은.<br>딱 한 번, 같은 곳에 밑줄을 쳤습니다. 바로 어느 호의 <b>제목</b>이었는데요 — 몇 호였을까요?</p>
+  <p class="answer step quote-serif">28호 "속도는 천천히, 방향은 정확히"</p>
+  <div class="vs step">
+    <div><h3>김아라의 글</h3><p>"때와 상황에 알맞은 기여란"<br>— 지금 무엇을 할 것인가, <b>발밑</b>을 봤습니다</p></div>
+    <div><h3>박정은의 글</h3><p>"끝그림"<br>— 어디에 닿을 것인가, <b>지평선</b>을 봤습니다</p></div>
+  </div>
+  <div class="insight step"><b>상극도 결국 '방향' 앞에서는 만났습니다!</b> 같은 제목을 받아들고도 역시나 정반대의 글을 쓴 두 사람 — 참고로 이 제목은 4명이 함께 밑줄 친, 전체 인기 4위의 밑줄이기도 했습니다.</div>
+</section>
+
+<section class="slide">
+  <div class="tag">질문 11</div>
+  <h1 class="hook">선하팀에는 선하가<br>두 명 있습니다!</h1>
+  <p class="q">최선하 커넥터의 팀에는 '선하'가 한 명 더 있습니다!<br>누구일까요?</p>
+  <p class="hint">힌트: 성만 다릅니다</p>
+  <p class="answer step">황선하님!</p>
+  <p class="sub step">86명 중 '선하'는 딱 두 명인데,<br>그 두 명이 같은 팀이 되었습니다</p>
+  <div class="insight step"><b>선하팀 단톡방에서 "선하야" 하고 부르면 두 명이 대답합니다!</b> 운명의 팀 배정이었습니다.</div>
+</section>
+
+<section class="slide">
+  <div class="tag">질문 12</div>
+  <h1 class="hook">52주 무결점 인간을<br>공개합니다!</h1>
+  <p class="q">52호 전부, 단 하나도 빠짐없이 인증한 <b>완전 개근</b>은 딱 두 명!<br>누구일까요?</p>
+  <p class="hint">힌트: 그중 한 명은 이번 시즌 팀 리더(커넥터)가 되었습니다</p>
+  <p class="answer step">이유림(파티시에) · 서지은 — 52전 52승이었습니다!</p>
+  <p class="sub step">아깝게 놓친 기록도 있습니다. 김선혜님은 1호만 놓치고 51연속 무결점!<br>박영미 · 홍보라님은 마지막 52호 하나만 남겨둔 상태였습니다</p>
+  <div class="insight step"><b>개근왕은 커넥터가 되었습니다!</b> 52주를 완주한 이유림님은 새 시즌에서 이유림팀을 이끌고 있습니다. 꾸준함의 서사가 리더십으로 이어졌습니다.</div>
+</section>
+
+<section class="slide">
+  <div class="tag speedtag">스피드 라운드 2</div>
+  <h1 class="hook">다 같이,<br>문장 이어말하기!</h1>
+  <p class="q">우리가 함께 밑줄 친 문장들입니다.<br>뒷부분을 <b>다 같이 외쳐주세요!</b></p>
+  <div class="srow step"><span class="chos">"착한 사람이 아니라, ___"</span><span class="sans step">강한 사람이 되어야 한다!</span></div>
+  <div class="srow step"><span class="chos">"대충 열심히 하면, ___"</span><span class="sans step">늘 운이 오길 기다려야 한다</span></div>
+  <div class="srow step"><span class="chos">"오래 남는 것은 물건이 아니라, ___"</span><span class="sans step">정신이다</span></div>
+  <div class="srow step" style="border-bottom:none"><span class="chos">"속도는 천천히, ___"</span><span class="sans step">방향은 정확히!</span></div>
+</section>
+
+<section class="slide">
+  <div class="tag">마지막</div>
+  <h1 class="hook step on">우리는 이런 사람들이었습니다</h1>
+  <p class="sub step" style="font-size: clamp(18px, 2.3vw, 30px);">"강한 사람이 되어야 한다"에 가장 많이 밑줄 치고,<br>"지치면 나만 손해"에서 가장 많이 지쳤지만 —</p>
+  <p class="sub step" style="font-size: clamp(18px, 2.3vw, 30px);">결국 <span class="gold">923편의 글로 52주를 완성한 사람들</span>입니다</p>
+  <p class="answer step">생글즈 퀴즈 끝!<br>모두 수고하셨습니다 :)</p>
+</section>
+
+<div id="bar"></div>
+<div id="hud">
+  <span id="counter"></span>
+  <span class="keyhint">클릭/스페이스: 공개 · ← →: 이동 · F: 전체 화면</span>
+</div>
+
+<script>
+const slides = [...document.querySelectorAll('.slide')];
+let cur = 0;
+function render() {
+  slides.forEach((s, i) => s.classList.toggle('active', i === cur));
+  document.getElementById('counter').textContent = (cur + 1) + ' / ' + slides.length;
+  document.getElementById('bar').style.width = ((cur + 1) / slides.length * 100) + '%';
+}
+function nextStep() {
+  const hidden = slides[cur].querySelector('.step:not(.on)');
+  if (hidden) { hidden.classList.add('on'); return; }
+  if (cur < slides.length - 1) { cur++; render(); }
+}
+function prevSlide() {
+  const shown = [...slides[cur].querySelectorAll('.step.on')];
+  if (shown.length) { shown[shown.length - 1].classList.remove('on'); return; }
+  if (cur > 0) { cur--; render(); }
+}
+document.addEventListener('click', nextStep);
+document.addEventListener('keydown', e => {
+  if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); nextStep(); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+  else if (e.key === 'f' || e.key === 'F') {
+    document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  }
+});
+render();
+</script>
+</body>
+</html>
