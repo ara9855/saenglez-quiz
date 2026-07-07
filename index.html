@@ -49,7 +49,7 @@ body::before { content: ''; position: fixed; inset: 18px; border: 1px solid #ddc
 
 <section class="slide active">
   <div class="tag">생글즈 퀴즈</div>
-  <h1 class="title-main">우리가 함께 읽은 1년,<br><span class="gold">데이터로 열어봤습니다</span></h1>
+  <h1 class="title-main">생각구독 1년<br><span class="gold">결산 퀴즈</span></h1>
   <p class="title-sub">19명 · 인증글 923편 · 밑줄 1,078개 전수 분석<br>13개의 질문과 2번의 스피드 라운드로 우리의 52주를 되돌아봅니다</p>
   <p class="hint step">클릭 또는 스페이스 키로 진행합니다 · F 키를 누르면 전체 화면</p>
 </section>
@@ -222,12 +222,20 @@ body::before { content: ''; position: fixed; inset: 18px; border: 1px solid #ddc
 <div id="bar"></div>
 <div id="hud">
   <span id="counter"></span>
+  <button id="homeBtn" style="background: none; border: 1px solid #d3c3a9; border-radius: 999px; padding: 6px 18px; font-family: 'Gowun Dodum', sans-serif; font-size: 13px; color: #8a7a67; cursor: pointer;">⌂ 처음으로</button>
   <span class="keyhint">클릭/스페이스: 공개 · ← →: 이동 · F: 전체 화면</span>
 </div>
 
 <script>
 const slides = [...document.querySelectorAll('.slide')];
 let cur = 0;
+document.querySelectorAll('.step.on').forEach(e => e.dataset.init = '1');
+function goHome() {
+  cur = 0;
+  document.querySelectorAll('.step.on').forEach(e => { if (!e.dataset.init) e.classList.remove('on'); });
+  render();
+}
+document.getElementById('homeBtn').addEventListener('click', e => { e.stopPropagation(); goHome(); });
 function render() {
   slides.forEach((s, i) => s.classList.toggle('active', i === cur));
   document.getElementById('counter').textContent = (cur + 1) + ' / ' + slides.length;
